@@ -10,6 +10,7 @@
     input, button { display: block; margin: 10px 0; padding: 8px; width: 100%; max-width: 300px; }
     button { cursor: pointer; background: #4CAF50; color: white; border: none; }
     .message { margin: 10px 0; font-weight: bold; }
+    #tradeHistory div { background: #fff; padding: 8px; margin-bottom: 5px; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -41,6 +42,11 @@
   <input type="text" id="tradeResult" placeholder="Result (win/loss)">
   <button onclick="saveTrade()">Save Trade</button>
   <div class="message" id="tradeMessage"></div>
+
+  <hr>
+
+  <h2>Trade History</h2>
+  <div id="tradeHistory">No trades yet.</div>
 
   <script>
     const BASE_URL = "https://deriv-backend-8cpy.onrender.com";
@@ -76,6 +82,7 @@
       // Auto-fill User ID for Save Trade
       if (data.message === "Login successful ✅") {
         document.getElementById("tradeUserId").value = data.userId || data._id || data.email;
+        loadTradeHistory(); // load trades for this user
       }
     }
 
@@ -93,6 +100,28 @@
       });
       const data = await response.json();
       document.getElementById("tradeMessage").innerText = JSON.stringify(data);
+      loadTradeHistory(); // refresh trade history after saving
+    }
+
+    async function loadTradeHistory() {
+      const userId = document.getElementById("tradeUserId").value;
+      if (!userId) return;
+
+      const response = await fetch(`${BASE_URL}/get-trades/${userId}`);
+      const data = await response.json();
+
+      const container = document.getElementById("tradeHistory");
+      container.innerHTML = "";
+
+      if (data.success && data.trades.length > 0) {
+        data.trades.forEach(trade => {
+          const div = document.createElement("div");
+          div.textContent = `Market: ${trade.market}, Entry: ${trade.entry}, Exit: ${trade.exit}, Result: ${trade.result}`;
+          container.appendChild(div);
+        });
+      } else {
+        container.textContent = "No trades yet.";
+      }
     }
   </script>
 
