@@ -1,0 +1,100 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deriv Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f3f3f3; }
+    input, button { display: block; margin: 10px 0; padding: 8px; width: 100%; max-width: 300px; }
+    button { cursor: pointer; background: #4CAF50; color: white; border: none; }
+    .message { margin: 10px 0; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h2>Signup</h2>
+  <input type="text" id="signupName" placeholder="Name">
+  <input type="text" id="signupPhone" placeholder="Phone">
+  <input type="email" id="signupEmail" placeholder="Email">
+  <input type="password" id="signupPassword" placeholder="Password">
+  <input type="password" id="signupConfirm" placeholder="Confirm Password">
+  <button onclick="signup()">Signup</button>
+  <div class="message" id="signupMessage"></div>
+
+  <hr>
+
+  <h2>Login</h2>
+  <input type="email" id="loginEmail" placeholder="Email">
+  <input type="password" id="loginPassword" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <div class="message" id="loginMessage"></div>
+
+  <hr>
+
+  <h2>Save Trade</h2>
+  <input type="text" id="tradeUserId" placeholder="User ID">
+  <input type="text" id="tradeMarket" placeholder="Market">
+  <input type="number" id="tradeEntry" placeholder="Entry">
+  <input type="number" id="tradeExit" placeholder="Exit">
+  <input type="text" id="tradeResult" placeholder="Result (win/loss)">
+  <button onclick="saveTrade()">Save Trade</button>
+  <div class="message" id="tradeMessage"></div>
+
+  <script>
+    // Replace with your live Render backend URL
+    const BASE_URL = "https://deriv-backend-8cpy.onrender.com";
+
+    async function signup() {
+      const response = await fetch(`${BASE_URL}/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: document.getElementById("signupName").value,
+          phone: document.getElementById("signupPhone").value,
+          email: document.getElementById("signupEmail").value,
+          password: document.getElementById("signupPassword").value,
+          confirmPassword: document.getElementById("signupConfirm").value
+        })
+      });
+      const data = await response.json();
+      document.getElementById("signupMessage").innerText = JSON.stringify(data);
+    }
+
+    async function login() {
+      const response = await fetch(`${BASE_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: document.getElementById("loginEmail").value,
+          password: document.getElementById("loginPassword").value
+        })
+      });
+      const data = await response.json();
+      document.getElementById("loginMessage").innerText = JSON.stringify(data);
+      // Fill userId for saving trade after login
+      if (data.message === "Login successful ✅") {
+        document.getElementById("tradeUserId").value = data.email; // or fetch _id if you store it
+      }
+    }
+
+    async function saveTrade() {
+      const response = await fetch(`${BASE_URL}/save-trade`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: document.getElementById("tradeUserId").value,
+          market: document.getElementById("tradeMarket").value,
+          entry: Number(document.getElementById("tradeEntry").value),
+          exit: Number(document.getElementById("tradeExit").value),
+          result: document.getElementById("tradeResult").value
+        })
+      });
+      const data = await response.json();
+      document.getElementById("tradeMessage").innerText = JSON.stringify(data);
+    }
+  </script>
+
+</body>
+</html>
