@@ -1,10 +1,10 @@
-<!-- index.html -->
+<!-- index.html (v2 with JWT) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Deriv Dashboard</title>
+  <title>Deriv Dashboard v2</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f3f3f3; }
     input, button { display: block; margin: 10px 0; padding: 8px; width: 100%; max-width: 300px; }
@@ -50,6 +50,7 @@
 
   <script>
     const BASE_URL = "https://deriv-backend-8cpy.onrender.com";
+    let TOKEN = ""; // JWT token
 
     async function signup() {
       const response = await fetch(`${BASE_URL}/signup`, {
@@ -64,7 +65,7 @@
         })
       });
       const data = await response.json();
-      document.getElementById("signupMessage").innerText = JSON.stringify(data);
+      document.getElementById("signupMessage").innerText = data.message || JSON.stringify(data);
     }
 
     async function login() {
@@ -77,21 +78,23 @@
         })
       });
       const data = await response.json();
-      document.getElementById("loginMessage").innerText = JSON.stringify(data);
+      document.getElementById("loginMessage").innerText = data.message || JSON.stringify(data);
 
-      // Auto-fill User ID for Save Trade
-      if (data.message === "Login successful ✅") {
-        document.getElementById("tradeUserId").value = data.userId || data._id || data.email;
-        loadTradeHistory(); // load trades for this user
+      if (data.success) {
+        TOKEN = data.token; // store token
+        document.getElementById("tradeUserId").value = data.userId;
+        loadTradeHistory();
       }
     }
 
     async function saveTrade() {
       const response = await fetch(`${BASE_URL}/save-trade`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${TOKEN}`
+        },
         body: JSON.stringify({
-          userId: document.getElementById("tradeUserId").value,
           market: document.getElementById("tradeMarket").value,
           entry: Number(document.getElementById("tradeEntry").value),
           exit: Number(document.getElementById("tradeExit").value),
@@ -99,20 +102,18 @@
         })
       });
       const data = await response.json();
-      document.getElementById("tradeMessage").innerText = JSON.stringify(data);
-      loadTradeHistory(); // refresh trade history after saving
+      document.getElementById("tradeMessage").innerText = data.message || JSON.stringify(data);
+      loadTradeHistory(); // refresh after saving
     }
 
     async function loadTradeHistory() {
-      const userId = document.getElementById("tradeUserId").value;
-      if (!userId) return;
-
-      const response = await fetch(`${BASE_URL}/get-trades/${userId}`);
+      if (!TOKEN) return;
+      const response = await fetch(`${BASE_URL}/get-trades`, {
+        headers: { "Authorization": `Bearer ${TOKEN}` }
+      });
       const data = await response.json();
-
       const container = document.getElementById("tradeHistory");
       container.innerHTML = "";
-
       if (data.success && data.trades.length > 0) {
         data.trades.forEach(trade => {
           const div = document.createElement("div");
