@@ -34,7 +34,7 @@
   <hr>
 
   <h2>Save Trade</h2>
-  <input type="text" id="tradeUserId" placeholder="User ID">
+  <input type="text" id="tradeUserId" placeholder="User ID" readonly>
   <input type="text" id="tradeMarket" placeholder="Market">
   <input type="number" id="tradeEntry" placeholder="Entry">
   <input type="number" id="tradeExit" placeholder="Exit">
@@ -43,7 +43,6 @@
   <div class="message" id="tradeMessage"></div>
 
   <script>
-    // Replace with your live Render backend URL
     const BASE_URL = "https://deriv-backend-8cpy.onrender.com";
 
     async function signup() {
@@ -73,9 +72,10 @@
       });
       const data = await response.json();
       document.getElementById("loginMessage").innerText = JSON.stringify(data);
-      // Fill userId for saving trade after login
+
+      // Auto-fill User ID for Save Trade
       if (data.message === "Login successful ✅") {
-        document.getElementById("tradeUserId").value = data.email; // or fetch _id if you store it
+        document.getElementById("tradeUserId").value = data.userId || data._id || data.email;
       }
     }
 
