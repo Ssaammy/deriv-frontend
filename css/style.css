@@ -1,0 +1,12 @@
+body {margin:0; font-family: Arial, sans-serif; background:#0f172a; color:white;}
+header{display:flex; justify-content:flex-end; padding:15px; background:#1e293b;}
+header a{margin-left:15px; color:white; text-decoration:none; cursor:pointer;}
+.container{display:flex; height:calc(100vh - 50px);}
+.left-panel{flex:3; padding:20px;}
+.right-panel{flex:1; background:#1e293b; padding:20px;}
+.chart-card{background:#020617; padding:20px; border-radius:10px; margin-bottom:20px;}
+.current-value{display:flex; justify-content:space-between; font-size:1.2em; margin-bottom:10px;}
+.status-bar{display:flex; justify-content:space-between; align-items:center; margin-top:20px;}
+.status-bar span{font-weight:bold;}
+button.run-btn{padding:8px 15px; background:#22c55e; border:none; border-radius:5px; cursor:pointer;}
+.right-panel button{width:100%; margin-bottom:10px; padding:10px; background:#22c55e; border:none; border-radius:5px; cursor:pointer; color:white;}
