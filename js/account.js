@@ -1,33 +1,24 @@
-function login(){
+let userEmail = "user@example.com";
+let balance = 1000;
+let accountType = "Demo";
 
-let email=prompt("Enter email")
-
-localStorage.setItem("email",email)
-
-alert("Logged in")
-
+function login() {
+    const email = prompt("Enter email:");
+    userEmail = email || userEmail;
+    document.getElementById("userEmail").innerText = userEmail;
 }
 
-function signup(){
-
-alert("Signup system coming soon")
-
+function signup() {
+    alert("Sign up clicked!");
 }
 
-function logout(){
-
-localStorage.removeItem("email")
-
-alert("Logged out")
-
+function logout() {
+    alert("Logged out!");
+    userEmail = "user@example.com";
+    document.getElementById("userEmail").innerText = userEmail;
 }
 
-function enterApiToken(){
-
-let token=prompt("Enter API token")
-
-localStorage.setItem("token",token)
-
-alert("API token saved")
-
+function enterApiToken() {
+    const token = prompt("Enter your API token:");
+    if (token) alert("API token saved ✅");
 }

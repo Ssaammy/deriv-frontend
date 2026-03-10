@@ -1,55 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Dashboard</title>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-<title>TradeBot Platform</title>
+    <!-- Trading Chart Library -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
-<link rel="stylesheet" href="css/style.css">
-
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/chart.css">
 </head>
 
-<body>
+<body class="bg-gray-900 text-white">
 
-<header>
+    <!-- HEADER / NAV -->
+    <header class="flex justify-between items-center px-6 py-3 bg-gray-800 shadow">
+        <div class="text-2xl font-bold text-green-400">TradePro</div>
+        <nav class="space-x-6">
+            <button onclick="login()" class="hover:text-green-400">Log in</button>
+            <button onclick="signup()" class="hover:text-green-400">Sign up</button>
+            <button onclick="enterApiToken()" class="hover:text-green-400">API Token</button>
+        </nav>
+    </header>
 
-<div class="logo">TradeBot</div>
+    <div class="flex h-screen">
 
-<nav>
+        <!-- SIDEBAR -->
+        <aside class="w-56 bg-gray-800 p-4 space-y-4 shadow-inner">
+            <div class="font-semibold text-green-400">Menu</div>
+            <button class="w-full text-left hover:text-green-400">Chart</button>
+            <button class="w-full text-left hover:text-green-400">Tradingview</button>
+            <button class="w-full text-left hover:text-green-400">Trading Grid</button>
+        </aside>
 
-<a href="dashboard.html">Speedbot</a>
-<a href="dashboard.html">Chart</a>
-<a href="dashboard.html">Tradingview</a>
-<a href="dashboard.html">Trading Grid</a>
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 p-6 overflow-auto">
 
-</nav>
+            <!-- ACCOUNT PANEL -->
+            <div class="flex justify-between items-center mb-4 p-4 bg-gray-800 rounded shadow">
+                <div>
+                    <p>Email: <span id="userEmail">user@example.com</span></p>
+                    <p>Balance: <span id="userBalance">0.00</span> USD</p>
+                    <p>Account: <span id="accountType">Demo</span></p>
+                </div>
+                <button onclick="logout()" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700">Log out</button>
+            </div>
 
-<div class="auth">
+            <!-- TRADING CHART -->
+            <div class="chart-card bg-gray-800 p-4 rounded shadow mb-6">
+                <div class="flex justify-between mb-2">
+                    <div>
+                        <span id="price" class="text-2xl font-bold">940.518</span>
+                        <span id="change" class="ml-2 text-green-400">0.00%</span>
+                    </div>
+                    <select id="symbolSelector" class="bg-gray-700 px-2 py-1 rounded">
+                        <option value="R_100">Volatility 100 Index</option>
+                        <option value="R_50">Volatility 50 Index</option>
+                        <option value="R_25">Volatility 25 Index</option>
+                        <option value="R_10">Volatility 10 Index</option>
+                        <option value="frxAUDUSD">AUD/USD</option>
+                    </select>
+                </div>
 
-<a href="#" onclick="login()">Log in</a>
-<a href="#" onclick="signup()">Sign up</a>
-<button onclick="enterApiToken()">API Token</button>
+                <div id="chart" style="height:400px;"></div>
 
-</div>
+                <!-- Probability Bars -->
+                <div id="percentageBars" class="mt-4 flex space-x-2 justify-center"></div>
+            </div>
 
-</header>
+            <!-- TRADING PANEL -->
+            <div class="trading-panel bg-gray-800 p-4 rounded shadow">
+                <div class="flex space-x-4 items-center">
+                    <input id="tradeAmount" type="number" placeholder="Amount" class="px-2 py-1 rounded bg-gray-700 w-32">
+                    <input id="stopLoss" type="number" placeholder="Stop Loss" class="px-2 py-1 rounded bg-gray-700 w-32">
+                    <input id="takeProfit" type="number" placeholder="Take Profit" class="px-2 py-1 rounded bg-gray-700 w-32">
+                    <button onclick="buyTrade()" class="bg-green-600 px-4 py-2 rounded hover:bg-green-700">Buy</button>
+                    <button onclick="sellTrade()" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700">Sell</button>
+                </div>
+            </div>
 
+        </main>
+    </div>
 
-<section class="hero">
-
-<h1>Automated Trading Platform</h1>
-
-<p>Connect your trading account and run smart bots.</p>
-
-<a href="dashboard.html" class="start-btn">
-Open Dashboard
-</a>
-
-</section>
-
-<script src="js/account.js"></script>
+    <!-- JS FILES -->
+    <script src="js/chart.js"></script>
+    <script src="js/account.js"></script>
+    <script src="js/deriv.js"></script>
 
 </body>
 </html>
