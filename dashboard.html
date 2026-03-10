@@ -1,123 +1,201 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TradePro Dashboard</title>
 
-<title>Dashboard</title>
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      background:#0f172a;
+      color:white;
+    }
 
-<style>
+    /* Sidebar */
+    .sidebar{
+      width:220px;
+      height:100vh;
+      background:#020617;
+      position:fixed;
+      padding:20px;
+    }
+    .sidebar h2{
+      color:#22c55e;
+      margin-bottom:30px;
+    }
+    .sidebar a{
+      display:block;
+      margin:15px 0;
+      color:white;
+      text-decoration:none;
+    }
 
-body{
-margin:0;
-font-family:Arial;
-background:#0f172a;
-color:white;
-}
+    /* Main content */
+    .main{
+      margin-left:240px;
+      padding:40px;
+    }
 
-.sidebar{
-width:220px;
-height:100vh;
-background:#020617;
-position:fixed;
-padding:20px;
-}
+    /* Cards */
+    .card{
+      background:#1e293b;
+      padding:20px;
+      border-radius:10px;
+      margin-bottom:20px;
+    }
 
-.sidebar h2{
-color:#22c55e;
-}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:20px;
+      margin-bottom:30px;
+    }
 
-.sidebar a{
-display:block;
-margin:15px 0;
-color:white;
-text-decoration:none;
-}
+    /* API Token Input */
+    #apiToken{
+      width:100%;
+      padding:10px;
+      margin:10px 0;
+      border-radius:5px;
+      border:none;
+    }
+    #connectTokenBtn{
+      padding:10px 20px;
+      background:#22c55e;
+      border:none;
+      border-radius:5px;
+      color:white;
+      cursor:pointer;
+    }
 
-.main{
-margin-left:240px;
-padding:40px;
-}
+    /* Chart placeholder */
+    #chartContainer{
+      background:#1e293b;
+      border-radius:10px;
+      padding:20px;
+      margin-bottom:30px;
+    }
 
-.card{
-background:#1e293b;
-padding:20px;
-border-radius:10px;
-margin-bottom:20px;
-}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:20px;
-}
-@media(max-width:768px){
-  .sidebar{
-    width:100%;
-    height:auto;
-    position:relative;
-    padding:15px;
-  }
-
-  .main{
-    margin-left:0;
-    padding:20px;
-  }
-
-  .grid{
-    grid-template-columns:1fr;
-  }
-
-  .card{
-    margin-bottom:15px;
-  }
-}
-
-
-</style>
+    /* Responsive for mobile */
+    @media(max-width:768px){
+      .sidebar{
+        width:100%;
+        height:auto;
+        position:relative;
+        padding:15px;
+      }
+      .main{
+        margin-left:0;
+        padding:20px;
+      }
+      .grid{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
 
 </head>
-
 <body>
 
+<!-- Sidebar -->
 <div class="sidebar">
-
-<h2>TradePro</h2>
-
-<a href="#">Dashboard</a>
-<a href="#">Trades</a>
-<a href="#">Statistics</a>
-<a href="#">Account</a>
-
+  <h2>TradePro</h2>
+  <a href="#">Dashboard</a>
+  <a href="#">Trades</a>
+  <a href="#">Statistics</a>
+  <a href="#">Account</a>
 </div>
 
+<!-- Main content -->
 <div class="main">
 
-<h1>Trading Dashboard</h1>
+  <h1>Trading Dashboard</h1>
 
-<div class="grid">
+  <!-- API Token input -->
+  <div class="card">
+    <h3>Connect Your Deriv Account</h3>
+    <input type="text" id="apiToken" placeholder="Enter your Deriv API token">
+    <button id="connectTokenBtn" onclick="saveToken()">Connect</button>
+  </div>
 
-<div class="card">
-<h3>Total Trades</h3>
-<p>0</p>
+  <!-- Stats cards -->
+  <div class="grid">
+    <div class="card">
+      <h3>Total Trades</h3>
+      <p id="totalTrades">0</p>
+    </div>
+    <div class="card">
+      <h3>Win Rate</h3>
+      <p id="winRate">0%</p>
+    </div>
+    <div class="card">
+      <h3>Total Profit</h3>
+      <p id="profit">$0</p>
+    </div>
+  </div>
+
+  <!-- Recent Trades -->
+  <div class="card">
+    <h2>Recent Trades</h2>
+    <div id="trades">No trades yet</div>
+  </div>
+
+  <!-- Chart placeholder -->
+  <div id="chartContainer" class="card">
+    <h2>Live Market Chart</h2>
+    <canvas id="tradeChart" width="400" height="200"></canvas>
+  </div>
+
 </div>
 
-<div class="card">
-<h3>Win Rate</h3>
-<p>0%</p>
-</div>
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Backend API
+  const API = "https://deriv-backend-8cpy.onrender.com";
 
-<div class="card">
-<h3>Total Profit</h3>
-<p>$0</p>
-</div>
+  // Save API token
+  function saveToken(){
+    const token = document.getElementById("apiToken").value;
+    if(token){
+      localStorage.setItem("apiToken", token);
+      alert("API token saved successfully!");
+      fetchLiveMarketData(token);
+    } else {
+      alert("Please enter a valid API token");
+    }
+  }
 
-</div>
+  // Placeholder: Fetch live market data
+  function fetchLiveMarketData(token){
+    console.log("Connecting to Deriv with token:", token);
+    // Later: connect WebSocket and fetch trades, win rate, profit
+  }
 
-<div class="card">
-<h2>Recent Trades</h2>
-<p>No trades yet</p>
-</div>
+  // Placeholder chart example
+  const ctx = document.getElementById('tradeChart').getContext('2d');
+  const tradeChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Trade 1','Trade 2','Trade 3','Trade 4','Trade 5'],
+      datasets: [{
+        label: 'Profit',
+        data: [0,0,0,0,0],
+        backgroundColor: 'rgba(34,197,94,0.2)',
+        borderColor: 'rgba(34,197,94,1)',
+        borderWidth: 2
+      }]
+    },
+    options:{
+      responsive:true,
+      scales:{
+        y:{ beginAtZero:true }
+      }
+    }
+  });
 
-</div>
-
+</script>
 </body>
 </html>
