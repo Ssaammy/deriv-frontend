@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Dashboard</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+}
+
+.sidebar{
+width:220px;
+height:100vh;
+background:#020617;
+position:fixed;
+padding:20px;
+}
+
+.sidebar h2{
+color:#22c55e;
+}
+
+.sidebar a{
+display:block;
+margin:15px 0;
+color:white;
+text-decoration:none;
+}
+
+.main{
+margin-left:240px;
+padding:40px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2>TradePro</h2>
+
+<a href="#">Dashboard</a>
+<a href="#">Trades</a>
+<a href="#">Statistics</a>
+<a href="#">Account</a>
+
+</div>
+
+<div class="main">
+
+<h1>Trading Dashboard</h1>
+
+<div class="grid">
+
+<div class="card">
+<h3>Total Trades</h3>
+<p>0</p>
+</div>
+
+<div class="card">
+<h3>Win Rate</h3>
+<p>0%</p>
+</div>
+
+<div class="card">
+<h3>Total Profit</h3>
+<p>$0</p>
+</div>
+
+</div>
+
+<div class="card">
+<h2>Recent Trades</h2>
+<p>No trades yet</p>
+</div>
+
+</div>
+
+</body>
+</html>
