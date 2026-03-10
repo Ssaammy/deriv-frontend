@@ -40,18 +40,8 @@ button{padding:10px 20px; background:#22c55e; border:none; border-radius:5px; co
     <h1>Live Deriv Dashboard</h1>
 
     <div class="card">
-      <h3>Connect Your Deriv Account</h3>
-      <input type="text" id="apiToken" placeholder="Enter your API token">
-      <select id="accountType">
-        <option value="demo">Demo Account</option>
-        <option value="real">Real Account</option>
-      </select>
-      <button onclick="saveToken()">Connect</button>
-      <button onclick="logout()">Log Out</button>
-    </div>
-
-    <div class="card">
       <h3>Trade Controls</h3>
+      <input type="text" id="searchSymbol" placeholder="Search Symbol" oninput="filterSymbols()">
       <select id="symbolSelector"></select>
       <select id="contractType">
         <option value="CALL">CALL</option>
@@ -72,7 +62,7 @@ button{padding:10px 20px; background:#22c55e; border:none; border-radius:5px; co
 
     <div id="chartContainer" class="card">
       <h2>Live Candlestick Chart</h2>
-      <canvas id="tradeChart" width="400" height="200"></canvas>
+      <div id="chart" style="height:400px;"></div>
     </div>
   </div>
 
@@ -96,6 +86,14 @@ button{padding:10px 20px; background:#22c55e; border:none; border-radius:5px; co
   <div id="account" class="section" style="display:none;">
     <h1>Account Details</h1>
     <div class="card">
+      <input type="text" id="apiToken" placeholder="Enter API token">
+      <select id="accountType">
+        <option value="demo">Demo Account</option>
+        <option value="real">Real Account</option>
+      </select>
+      <button onclick="saveToken()">Log In</button>
+      <button onclick="logout()">Log Out</button>
+
       <p><strong>Account Balance:</strong> <span id="accBalance">$0</span></p>
       <p><strong>Account Type:</strong> <span id="accType">Demo</span></p>
       <p><strong>Email:</strong> <span id="accEmail">user@example.com</span></p>
@@ -104,12 +102,33 @@ button{padding:10px 20px; background:#22c55e; border:none; border-radius:5px; co
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 let ws;
 let activeSymbol = "R_100";
 let portfolioContracts = [];
-let candlestickData = [];
+let allSymbols = [];
+let candles = [];
+const chartDiv = document.getElementById("chart");
+
+// Initialize chart
+const chart = LightweightCharts.createChart(chartDiv, {
+  width: chartDiv.offsetWidth,
+  height: 400,
+  layout: {backgroundColor:'#1e293b', textColor:'white'},
+  grid: {vertLines:{color:'#334155'}, horzLines:{color:'#334155'}},
+  crosshair: {mode: LightweightCharts.CrosshairMode.Normal},
+  rightPriceScale: {borderColor:'#334155'},
+  timeScale: {borderColor:'#334155', timeVisible:true, secondsVisible:false}
+});
+const candleSeries = chart.addCandlestickSeries({
+  upColor: '#22c55e',
+  downColor: '#ef4444',
+  borderDownColor:'#ef4444',
+  borderUpColor:'#22c55e',
+  wickDownColor:'#ef4444',
+  wickUpColor:'#22c55e'
+});
 
 // Notifications
 function showNotification(msg,type='success'){
@@ -131,16 +150,21 @@ function showSection(id){
 // Logout
 function logout(){
   localStorage.removeItem("apiToken");
+  localStorage.removeItem("accountType");
   location.reload();
 }
 
 // Save API token & connect
 function saveToken(){
   const token = document.getElementById("apiToken").value;
+  const type = document.getElementById("accountType").value;
   if(!token) return showNotification("Enter API token",'error');
+
   localStorage.setItem("apiToken", token);
-  document.getElementById("accType").innerText = document.getElementById("accountType").value;
-  connectDeriv(token, document.getElementById("accountType").value);
+  localStorage.setItem("accountType", type);
+  document.getElementById("accType").innerText = type.charAt(0).toUpperCase() + type.slice(1);
+
+  connectDeriv(token, type);
 }
 
 // Connect Deriv WS
@@ -148,35 +172,43 @@ function connectDeriv(token,type){
   ws = new WebSocket("wss://ws.binaryws.com/websockets/v3?app_id=1089");
   ws.onopen = ()=>{ ws.send(JSON.stringify({authorize: token})); };
   ws.onmessage = msg=>{
-    const data=JSON.parse(msg.data);
+    const data = JSON.parse(msg.data);
+
     if(data.authorize){
       showNotification(type.toUpperCase()+" Account connected ✅");
-      ws.send(JSON.stringify({active_symbols:"brief"}));
-      ws.send(JSON.stringify({portfolio:1}));
       ws.send(JSON.stringify({balance:1}));
+      ws.send(JSON.stringify({portfolio:1}));
+      ws.send(JSON.stringify({active_symbols:"brief"}));
       subscribeTicks(activeSymbol);
     }
     if(data.error) showNotification("Invalid API token",'error');
+
     if(data.active_symbols){
-      const sel=document.getElementById("symbolSelector");
-      sel.innerHTML="";
-      data.active_symbols.forEach(s=>{
-        const o=document.createElement("option");
-        o.value=s.symbol; o.text=s.display_name; sel.appendChild(o);
+      allSymbols = data.active_symbols.sort((a,b)=>a.symbol.localeCompare(b.symbol));
+      const sel = document.getElementById("symbolSelector");
+      sel.innerHTML = "";
+      allSymbols.forEach(s=>{
+        const o = document.createElement("option");
+        o.value = s.symbol; o.text = s.display_name; sel.appendChild(o);
       });
-      sel.value=activeSymbol; sel.onchange=()=>{activeSymbol=sel.value; subscribeTicks(activeSymbol);}
+      sel.value = activeSymbol;
+      sel.onchange=()=>{activeSymbol=sel.value; subscribeTicks(activeSymbol);}
     }
+
     if(data.balance){
       document.getElementById("balance").innerText="$"+data.balance.balance;
       document.getElementById("accBalance").innerText="$"+data.balance.balance;
     }
+
     if(data.portfolio){
       portfolioContracts = data.portfolio.contracts;
       updatePortfolio();
     }
+
     if(data.tick){
-      updateCandlestick(data.tick);
+      updateCandle(data.tick);
     }
+
     if(data.buy){
       if(data.buy.error) showNotification("Trade failed: "+data.buy.error.message,'error');
       else { showNotification("Trade opened! Contract ID: "+data.buy.contract_id); portfolioContracts.push(data.buy); updatePortfolio();}
@@ -184,47 +216,59 @@ function connectDeriv(token,type){
   };
 }
 
-// Candlestick chart
-const ctx = document.getElementById("tradeChart").getContext("2d");
-const tradeChart = new Chart(ctx,{
-  type:'bar',
-  data:{labels:[], datasets:[{label:'Price', data:[], backgroundColor:[], borderColor:'black', borderWidth:1}]},
-  options:{responsive:true, scales:{y:{beginAtZero:false}}}
-});
-
-function updateCandlestick(tick){
+// Candlestick chart update
+const candleInterval = 60; // 1 min
+let currentCandle = null;
+function updateCandle(tick){
+  const time = Math.floor(tick.epoch/candleInterval)*candleInterval;
   const price = tick.ask;
-  const time = new Date(tick.epoch*1000).toLocaleTimeString();
-  const color = candlestickData.length && price >= candlestickData[candlestickData.length-1].price ? 'green':'red';
-  candlestickData.push({time, price, color});
-  tradeChart.data.labels.push(time);
-  tradeChart.data.datasets[0].data.push(price);
-  tradeChart.data.datasets[0].backgroundColor.push(color);
-  if(tradeChart.data.labels.length>30){tradeChart.data.labels.shift(); tradeChart.data.datasets[0].data.shift(); tradeChart.data.datasets[0].backgroundColor.shift();}
-  tradeChart.update();
+
+  if(!currentCandle || currentCandle.time !== time){
+    if(currentCandle) candleSeries.update(currentCandle);
+    currentCandle = {time, open:price, high:price, low:price, close:price};
+  } else {
+    currentCandle.close = price;
+    if(price > currentCandle.high) currentCandle.high = price;
+    if(price < currentCandle.low) currentCandle.low = price;
+  }
+  candleSeries.update(currentCandle);
 }
 
 // Trade functions
 function subscribeTicks(symbol){ ws.send(JSON.stringify({ticks:symbol})); }
 function openTrade(){
   if(!ws||ws.readyState!==1) return showNotification("WS not connected",'error');
-  const type=document.getElementById("contractType").value;
-  const stake=parseFloat(document.getElementById("stake").value)||1;
-  const duration=parseInt(document.getElementById("duration").value)||1;
-  const sl=parseFloat(document.getElementById("stopLoss").value)||0;
-  const tp=parseFloat(document.getElementById("takeProfit").value)||0;
-  ws.send(JSON.stringify({buy:1, price:stake, parameters:{contract_type:type, amount:stake, basis:"stake", symbol:activeSymbol, duration:duration, duration_unit:"m", currency:"USD", stop_loss:sl>0?sl:undefined, take_profit:tp>0?tp:undefined}}));
+  const type = document.getElementById("contractType").value;
+  const stake = parseFloat(document.getElementById("stake").value)||1;
+  const duration = parseInt(document.getElementById("duration").value)||1;
+  const sl = parseFloat(document.getElementById("stopLoss").value)||0;
+  const tp = parseFloat(document.getElementById("takeProfit").value)||0;
+  ws.send(JSON.stringify({
+    buy:1,
+    price:stake,
+    parameters:{
+      contract_type:type,
+      amount:stake,
+      basis:"stake",
+      symbol:activeSymbol,
+      duration:duration,
+      duration_unit:"m",
+      currency:"USD",
+      stop_loss: sl>0?sl:undefined,
+      take_profit: tp>0?tp:undefined
+    }
+  }));
   showNotification(type+" trade requested!",'success');
 }
 
-// Update Portfolio / Trades
+// Portfolio / Trades
 function updatePortfolio(){
   const tradesDiv = document.getElementById("tradesList");
   tradesDiv.innerHTML="";
   let total=portfolioContracts.length, wins=0, profit=0;
   portfolioContracts.slice(-5).reverse().forEach(c=>{
     const div=document.createElement("div");
-    div.innerText=`${c.contract_type || c.transaction_type} | ${c.symbol || c.underlying} | Stake: $${c.stake||c.amount} | Profit: $${c.profit||0}`;
+    div.innerText=`${c.contract_type||c.transaction_type} | ${c.symbol||c.underlying} | Stake: $${c.stake||c.amount} | Profit: $${c.profit||0}`;
     tradesDiv.appendChild(div);
     if(c.profit>0) wins++; if(c.profit) profit+=c.profit;
   });
@@ -235,9 +279,26 @@ function updatePortfolio(){
   document.getElementById("statProfit").innerText="$"+profit.toFixed(2);
 }
 
-// Auto reconnect if token saved
-const savedToken=localStorage.getItem("apiToken");
-if(savedToken){document.getElementById("apiToken").value=savedToken; connectDeriv(savedToken, document.getElementById("accountType").value);}
+// Filter symbols
+function filterSymbols(){
+  const search = document.getElementById("searchSymbol").value.toLowerCase();
+  const sel = document.getElementById("symbolSelector");
+  sel.innerHTML = "";
+  allSymbols.filter(s=>s.display_name.toLowerCase().includes(search)).forEach(s=>{
+    const o=document.createElement("option");
+    o.value=s.symbol; o.text=s.display_name; sel.appendChild(o);
+  });
+}
+
+// Auto connect if token saved
+const savedToken = localStorage.getItem("apiToken");
+const savedType = localStorage.getItem("accountType")||"demo";
+if(savedToken){
+  document.getElementById("apiToken").value = savedToken;
+  document.getElementById("accountType").value = savedType;
+  document.getElementById("accType").innerText = savedType.charAt(0).toUpperCase() + savedType.slice(1);
+  connectDeriv(savedToken, savedType);
+}
 </script>
 </body>
 </html>
