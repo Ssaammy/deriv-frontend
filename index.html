@@ -1,111 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YourTool – Powered by Deriv</title>
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/chart.css">
-    <!-- Lightweight Charts library -->
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyTradingTool</title>
+  <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
-    <!-- Top Navigation Bar -->
-    <header class="top-nav">
-        <div class="logo">YourTool <span class="powered">– Powered by Deriv</span></div>
-        <div class="nav-links">
-            <button onclick="login()">Log In</button>
-            <button onclick="enterApiToken()">API Token</button>
-            <button onclick="signup()">Sign Up</button>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <div class="main-container">
-
-        <!-- Sidebar / Markets -->
-        <aside class="sidebar">
-            <h2>Markets</h2>
-            <select id="marketSelector">
-                <optgroup label="Favorite">
-                    <option value="R_100">Crash 100</option>
-                    <option value="R_50">Jump 50</option>
-                </optgroup>
-                <optgroup label="Derived Baskets">
-                    <option value="basket1">Basket 1</option>
-                    <option value="basket2">Basket 2</option>
-                </optgroup>
-                <optgroup label="Synthetics">
-                    <option value="synthetic_10">Volatility 10 Index</option>
-                    <option value="synthetic_50">Volatility 50 Index</option>
-                </optgroup>
-                <optgroup label="Forex">
-                    <option value="frxAUDUSD">AUD/USD</option>
-                    <option value="frxEURUSD">EUR/USD</option>
-                </optgroup>
-                <optgroup label="Crypto">
-                    <option value="CRYPTO_BTCUSD">BTC/USD</option>
-                    <option value="CRYPTO_ETHUSD">ETH/USD</option>
-                </optgroup>
-                <optgroup label="Commodities">
-                    <option value="COFFEE">Coffee</option>
-                    <option value="GOLD">Gold</option>
-                </optgroup>
-            </select>
-            <button onclick="changeSymbol()">Load Symbol</button>
-        </aside>
-
-        <!-- Main Dashboard Panel -->
-        <section class="dashboard">
-            <!-- Live Chart -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div>
-                        Price: <span id="price">0.000</span>
-                        <span id="change">0.00%</span>
-                    </div>
-                    <div>
-                        Symbol:
-                        <select id="symbolSelector">
-                            <option value="R_100">Crash 100</option>
-                            <option value="R_50">Jump 50</option>
-                            <option value="synthetic_10">Volatility 10 Index</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="chart" style="height: 400px; width: 100%;"></div>
-            </div>
-
-            <!-- Trading Panel -->
-            <div class="trade-panel">
-                <input type="number" id="tradeAmount" placeholder="Amount USD">
-                <input type="number" id="stopLoss" placeholder="Stop Loss">
-                <input type="number" id="takeProfit" placeholder="Take Profit">
-                <button onclick="placeTrade('buy')" class="buy-btn">Buy</button>
-                <button onclick="placeTrade('sell')" class="sell-btn">Sell</button>
-            </div>
-
-            <!-- Analysis Tools -->
-            <div class="analysis-panel">
-                <h3>Analysis Tools</h3>
-                <p>Here you can display signals, charts, historical data, and other analysis tools. (Placeholder for now)</p>
-            </div>
-
-            <!-- Chat Panel -->
-            <div class="chat-panel">
-                <h3>Chat</h3>
-                <div id="chatMessages"></div>
-                <input type="text" id="chatInput" placeholder="Type a message">
-                <button onclick="sendChat()">Send</button>
-            </div>
-        </section>
+  <!-- Top Navigation -->
+  <header class="top-nav">
+    <div class="logo">MyTradingTool</div>
+    <div class="nav-buttons">
+      <button id="loginBtn">Login</button>
+      <button id="signupBtn">Sign Up</button>
+      <button id="getStartedBtn">Get Started</button>
+      <button id="productsBtn">Products</button>
     </div>
+  </header>
 
-    <!-- JS Scripts -->
-    <script src="js/account.js"></script>
-    <script src="js/deriv.js"></script>
-    <script src="js/chart.js"></script>
-    <script src="js/chat.js"></script>
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Trade live, powered by Deriv</h1>
+    <p>Access live markets, analysis, and trading tools from anywhere.</p>
+    <div class="hero-buttons">
+      <button id="heroLogin">Login</button>
+      <button id="heroSignup">Sign Up</button>
+    </div>
+    <canvas id="heroChart"></canvas>
+  </section>
+
+  <!-- Features / Products -->
+  <section class="features">
+    <h2>Our Tools & Features</h2>
+    <div class="feature-grid">
+      <div class="feature-card">Live Market Charts</div>
+      <div class="feature-card">Analysis Tools</div>
+      <div class="feature-card">Real & Demo Accounts</div>
+      <div class="feature-card">Custom Indicators</div>
+      <div class="feature-card">Trading History</div>
+      <div class="feature-card">Notifications & Alerts</div>
+    </div>
+  </section>
+
+  <script src="js/account.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/notifications.js"></script>
 </body>
 </html>

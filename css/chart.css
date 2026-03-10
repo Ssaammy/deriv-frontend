@@ -1,9 +1,79 @@
-/* chart.css */
+/* frontend/css/chart.css */
 
 /* Chart container */
-#chart {
-    border-radius: 8px;
-    background-color: #1e1e2f;
+#liveChart {
+  width: 100%;
+  max-width: 1200px;
+  height: 400px;
+  background: #1e1e2f;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  margin-bottom: 20px;
+  position: relative;
 }
 
-/* Tooltip & hover (Lightweight Charts handles basic tooltips) */
+/* Candlesticks colors */
+.candle-up {
+  background-color: #52c41a;
+}
+
+.candle-down {
+  background-color: #ff4d4f;
+}
+
+/* Chart zoom & grid */
+.chartjs-container {
+  position: relative;
+}
+
+#liveChart canvas {
+  border-radius: 12px;
+}
+
+/* Buy/Sell panel below chart */
+.chart-trade-panel {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.chart-trade-panel button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.chart-trade-panel #buyBtn { background: #52c41a; }
+.chart-trade-panel #sellBtn { background: #ff4d4f; }
+
+.chart-trade-panel button:hover {
+  opacity: 0.9;
+}
+
+/* Zoom buttons */
+.zoom-buttons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 5px;
+}
+
+.zoom-buttons button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #1890ff;
+  color: white;
+  font-weight: bold;
+}
+
+.zoom-buttons button:hover {
+  background: #40a9ff;
+}

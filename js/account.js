@@ -1,93 +1,78 @@
-// Simulated account management
-// Will store API token, email, account type (demo/real)
+// frontend/js/account.js
 
-let userApiToken = null; // This will be used by chart.js and deriv.js
-let userEmail = null;
-let accountType = 'demo'; // default
+// Simple localStorage-based login simulation for prototype
+let currentUser = JSON.parse(localStorage.getItem("user")) || null;
 
-// Function to show login popup
-function login() {
-    const email = prompt('Enter your email:');
-    const token = prompt('Enter your Deriv API token:');
+const loginBtn = document.getElementById("loginBtn");
+const signupBtn = document.getElementById("signupBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const apiBtn = document.getElementById("apiBtn");
 
-    if (!email || !token) {
-        alert('Login cancelled or missing credentials.');
-        return;
-    }
+// Prompt for login
+if (loginBtn) loginBtn.addEventListener("click", () => {
+  let email = prompt("Enter your email:");
+  let password = prompt("Enter your password:");
+  if (email && password) {
+    currentUser = { email: email, token: null, balance: 1000, accountType: "demo" };
+    localStorage.setItem("user", JSON.stringify(currentUser));
+    showNotification("Logged in successfully!", "success");
+    updateDashboardUI();
+  }
+});
 
-    userEmail = email;
-    userApiToken = token;
+// Sign up
+if (signupBtn) signupBtn.addEventListener("click", () => {
+  let email = prompt("Enter your email to sign up:");
+  if (email) {
+    currentUser = { email: email, token: null, balance: 1000, accountType: "demo" };
+    localStorage.setItem("user", JSON.stringify(currentUser));
+    showNotification("Signed up successfully!", "success");
+    updateDashboardUI();
+  }
+});
 
-    // Save to localStorage so it persists on refresh
-    localStorage.setItem('userEmail', userEmail);
-    localStorage.setItem('userApiToken', userApiToken);
-    localStorage.setItem('accountType', accountType);
+// Logout
+if (logoutBtn) logoutBtn.addEventListener("click", () => {
+  currentUser = null;
+  localStorage.removeItem("user");
+  showNotification("Logged out!", "info");
+  updateDashboardUI();
+});
 
-    alert('Login successful!');
+// API Token
+if (apiBtn) apiBtn.addEventListener("click", () => {
+  if (!currentUser) {
+    showNotification("Please log in first!", "error");
+    return;
+  }
+  let token = prompt("Enter your Deriv API token:");
+  if (token) {
+    currentUser.token = token;
+    localStorage.setItem("user", JSON.stringify(currentUser));
+    showNotification("API token saved!", "success");
+    enableTradingButtons(true);
+  }
+});
 
-    // Update chart.js token
-    if (typeof chart !== 'undefined') {
-        window.userApiToken = userApiToken;
-        console.log('API token updated for chart');
-    }
-
-    // Update UI
-    updateAccountUI();
+// Update account info in dashboard
+function updateDashboardUI() {
+  if (!currentUser) {
+    document.getElementById("userEmail")?.innerText = "-";
+    document.getElementById("userBalance")?.innerText = "-";
+    document.getElementById("displayToken")?.innerText = "-";
+    enableTradingButtons(false);
+  } else {
+    document.getElementById("userEmail")?.innerText = currentUser.email;
+    document.getElementById("userBalance")?.innerText = currentUser.balance;
+    document.getElementById("displayToken")?.innerText = currentUser.token || "-";
+    enableTradingButtons(currentUser.token ? true : false);
+  }
 }
 
-// Function to show API token input
-function enterApiToken() {
-    const token = prompt('Enter your Deriv API token:');
-    if (!token) return;
-    userApiToken = token;
-    localStorage.setItem('userApiToken', token);
-    alert('API token saved!');
-    if (typeof chart !== 'undefined') {
-        window.userApiToken = userApiToken;
-    }
+function enableTradingButtons(enable) {
+  document.getElementById("buyBtn")?.setAttribute("disabled", !enable);
+  document.getElementById("sellBtn")?.setAttribute("disabled", !enable);
 }
 
-// Function for sign up (placeholder)
-function signup() {
-    alert('Sign up functionality not implemented yet.');
-}
-
-// Log out function
-function logout() {
-    userApiToken = null;
-    userEmail = null;
-    accountType = 'demo';
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userApiToken');
-    localStorage.removeItem('accountType');
-    alert('Logged out successfully!');
-    updateAccountUI();
-}
-
-// Update UI to show logged-in user info
-function updateAccountUI() {
-    const navLinks = document.querySelector('.nav-links');
-    if (userEmail) {
-        navLinks.innerHTML = `
-            <span>Welcome, ${userEmail}</span>
-            <button onclick="logout()">Log Out</button>
-            <button onclick="enterApiToken()">API Token</button>
-        `;
-    } else {
-        navLinks.innerHTML = `
-            <button onclick="login()">Log In</button>
-            <button onclick="enterApiToken()">API Token</button>
-            <button onclick="signup()">Sign Up</button>
-        `;
-    }
-}
-
-// Load from localStorage on page load
-window.onload = () => {
-    userEmail = localStorage.getItem('userEmail');
-    userApiToken = localStorage.getItem('userApiToken');
-    accountType = localStorage.getItem('accountType') || 'demo';
-    updateAccountUI();
-    // Expose token globally for chart.js
-    window.userApiToken = userApiToken;
-};
+// Initial load
+updateDashboardUI();

@@ -1,84 +1,45 @@
-// Place trades using Deriv API via WebSocket
-// Uses userApiToken from account.js
+// frontend/js/deriv.js
 
-let tradeWs = null;
+let ws;
+let market = "R_50"; // default market
 
-// Connect trade WebSocket
-function connectTradeWs() {
-    if (!window.userApiToken) {
-        console.warn('No API token. Please log in.');
-        return;
-    }
+// Enable trading only if API token is provided
+function initDeriv() {
+  if (!currentUser || !currentUser.token) return;
 
-    if (tradeWs) tradeWs.close();
+  ws = new WebSocket(`wss://ws.binaryws.com/websockets/v3?app_id=1089&l=${currentUser.token}`);
 
-    tradeWs = new WebSocket(`wss://ws.binaryws.com/websockets/v3?app_id=1089&l=${window.userApiToken}`);
+  ws.onopen = () => {
+    showNotification("Connected to Deriv WebSocket!", "success");
+    subscribeMarket(market);
+  };
 
-    tradeWs.onopen = () => console.log('Connected to Deriv WebSocket for trading');
+  ws.onmessage = (msg) => {
+    const data = JSON.parse(msg.data);
+    // Handle trading info updates here if needed
+    console.log("Deriv WS message:", data);
+  };
 
-    tradeWs.onmessage = (msg) => {
-        const data = JSON.parse(msg.data);
-        if (data.error) {
-            console.error('Trade error:', data.error);
-            alert(`Trade Error: ${data.error.message}`);
-        } else if (data.proposal_open_contract) {
-            console.log('Trade placed successfully:', data.proposal_open_contract);
-            alert('Trade executed successfully!');
-        }
-    };
-
-    tradeWs.onerror = (err) => console.error('Trade WebSocket error:', err);
-
-    tradeWs.onclose = () => console.log('Trade WebSocket closed');
+  ws.onerror = () => showNotification("WebSocket connection error!", "error");
 }
 
-// Function to place trade
-function placeTrade(type) {
-    if (!window.userApiToken) {
-        alert('Please log in and enter API token before trading.');
-        return;
-    }
-
-    const symbol = document.getElementById('symbolSelector').value;
-    const amount = parseFloat(document.getElementById('tradeAmount').value);
-    const stopLoss = parseFloat(document.getElementById('stopLoss').value);
-    const takeProfit = parseFloat(document.getElementById('takeProfit').value);
-
-    if (!symbol || !amount || amount <= 0) {
-        alert('Please enter valid trade symbol and amount.');
-        return;
-    }
-
-    // Connect WS if not connected
-    if (!tradeWs || tradeWs.readyState !== WebSocket.OPEN) {
-        connectTradeWs();
-        setTimeout(() => executeTrade(type, symbol, amount, stopLoss, takeProfit), 500); // wait for connection
-    } else {
-        executeTrade(type, symbol, amount, stopLoss, takeProfit);
-    }
+// Subscribe to ticks for selected market
+function subscribeMarket(symbol) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ ticks: symbol }));
+  }
 }
 
-function executeTrade(type, symbol, amount, stopLoss, takeProfit) {
-    if (!tradeWs || tradeWs.readyState !== WebSocket.OPEN) {
-        alert('Trade WebSocket not connected.');
-        return;
-    }
+// Buy/Sell button actions
+document.getElementById("buyBtn")?.addEventListener("click", () => {
+  if (!currentUser || !currentUser.token) return showNotification("API token required", "error");
+  showNotification("Buy order placed (demo)", "info");
+});
 
-    // For simplicity, we’ll open a BINARY option contract (1 tick) as example
-    const tradeData = {
-        buy: 1,
-        price: amount,
-        parameters: {
-            contract_type: type.toUpperCase(), // 'BUY' or 'SELL'
-            symbol: symbol,
-            duration: 1, // 1 minute
-            duration_unit: 'm',
-            currency: 'USD',
-            barrier: null,
-            stop_loss: stopLoss || null,
-            take_profit: takeProfit || null
-        }
-    };
+document.getElementById("sellBtn")?.addEventListener("click", () => {
+  if (!currentUser || !currentUser.token) return showNotification("API token required", "error");
+  showNotification("Sell order placed (demo)", "info");
+});
 
-    tradeWs.send(JSON.stringify({ buy: tradeData.buy, price: tradeData.price, parameters: tradeData.parameters }));
-}
+// Initialize on page load
+initDeriv();
