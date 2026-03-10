@@ -1,37 +1,33 @@
-// account.js
+function login(){
 
-let userAccount = {
-    email: "",
-    apiToken: "",
-    type: "demo", // demo or real
-    balance: 0
-};
+let email=prompt("Enter email")
 
-// Open prompt to enter API token
-function enterApiToken() {
-    const token = prompt("Enter your Deriv API token:");
-    if (token && token.length > 0) {
-        userAccount.apiToken = token;
-        alert("API token saved ✅");
-        // Here you can trigger connection to Deriv WS
-        connectDeriv();
-    }
+localStorage.setItem("email",email)
+
+alert("Logged in")
+
 }
 
-// Switch account type
-function switchAccount(type) {
-    userAccount.type = type; // "demo" or "real"
-    updateAccountUI();
+function signup(){
+
+alert("Signup system coming soon")
+
 }
 
-// Update account section UI
-function updateAccountUI() {
-    document.getElementById("botStatus").innerText = `Account: ${userAccount.type.toUpperCase()} | ${userAccount.email || "No email"} | Balance: ${userAccount.balance}`;
+function logout(){
+
+localStorage.removeItem("email")
+
+alert("Logged out")
+
 }
 
-// Logout
-function logout() {
-    userAccount = {email:"", apiToken:"", type:"demo", balance:0};
-    updateAccountUI();
-    alert("Logged out ✅");
+function enterApiToken(){
+
+let token=prompt("Enter API token")
+
+localStorage.setItem("token",token)
+
+alert("API token saved")
+
 }

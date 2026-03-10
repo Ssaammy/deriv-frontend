@@ -1,56 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AUD Basket Dashboard</title>
-<link rel="stylesheet" href="css/style.css">
+
+<title>Trading Dashboard</title>
+
+<link rel="stylesheet" href="css/dashboard.css">
 <link rel="stylesheet" href="css/chart.css">
+
+<!-- Chart Library -->
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
 </head>
+
 <body>
 
-<header>
-  <a href="#" onclick="login()">Log in</a>
-  <a href="#" onclick="enterApiToken()">API Token</a>
-  <a href="#" onclick="signup()">Sign up</a>
-</header>
+<!-- TOP NAVIGATION -->
 
-<div class="container">
-  <div class="left-panel">
-    <div class="chart-card">
-      <div class="current-value">
-        <span id="currentVal">940.518</span>
-        <span id="percentageChange" style="color:#ef4444;">-0.021 (0.00%)</span>
-      </div>
-      <canvas id="audChart" class="line-chart"></canvas>
+<header class="topbar">
 
-      <div class="percentage-bars" id="percBars"></div>
+<div class="logo">TradeBot</div>
 
-      <div class="status-bar">
-        <span id="botStatus">Bot is not running</span>
-        <button class="run-btn" onclick="toggleBot()">Run</button>
-      </div>
-    </div>
-  </div>
+<nav class="topnav">
 
-  <div class="right-panel">
-    <button onclick="selectMode('Tradingview')">Tradingview</button>
-    <button onclick="selectMode('Trading Grid')">Trading Grid</button>
-    <hr style="margin:20px 0; border-color:#334155;">
-    <div>
-      <span>Account:</span>
-      <div id="accountInfo">No user logged in</div>
-      <button onclick="logout()">Log out</button>
-      <br><br>
-      <button onclick="switchAccount('demo')">Demo Account</button>
-      <button onclick="switchAccount('real')">Real Account</button>
-    </div>
-  </div>
+<a href="#">Speedbot</a>
+<a href="#">Chart</a>
+<a href="#">Tradingview</a>
+<a href="#">Trading Grid</a>
+
+</nav>
+
+<div class="auth">
+
+<a href="#" onclick="login()">Log in</a>
+
+<a href="#" onclick="signup()">Sign up</a>
+
+<button onclick="enterApiToken()">API Token</button>
+
 </div>
 
-<script src="js/main.js"></script>
+</header>
+
+
+
+<!-- MAIN DASHBOARD -->
+
+<div class="dashboard">
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<a href="#">Speedbot</a>
+<a href="#">Chart</a>
+<a href="#">Tradingview</a>
+<a href="#">Trading Grid</a>
+
+</div>
+
+
+
+<!-- MAIN CONTENT -->
+
+<div class="main-content">
+
+<!-- CHART CARD -->
+
+<div class="chart-card">
+
+<div class="price-section">
+
+<span id="price">940.518</span>
+
+<span id="change">0.00%</span>
+
+</div>
+
+<!-- LIVE CHART -->
+
+<div id="chart"></div>
+
+<!-- PROBABILITY BARS -->
+
+<div id="percentageBars"></div>
+
+</div>
+
+
+
+<!-- BOT CONTROL -->
+
+<div class="bot-card">
+
+<p id="botStatus">Bot is not running</p>
+
+<button class="run-btn" onclick="startBot()">Run</button>
+
+</div>
+
+
+
+</div>
+
+</div>
+
+
+
+<!-- JAVASCRIPT FILES -->
+
 <script src="js/chart.js"></script>
+
 <script src="js/account.js"></script>
+
 <script src="js/deriv.js"></script>
+
+<script src="js/bot.js"></script>
+
 </body>
+
 </html>
