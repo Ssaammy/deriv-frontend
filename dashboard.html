@@ -183,9 +183,10 @@
       }));
 
       // Subscribe to ticks for R_100
-      ws.send(JSON.stringify({
-        ticks: "R_100"
-      }));
+      ws.send(JSON.stringify({ ticks: "R_100" }));
+
+      // Subscribe to user's portfolio
+      ws.send(JSON.stringify({ portfolio: 1 }));
     };
 
     ws.onmessage = (msg) => {
@@ -201,6 +202,37 @@
       // Authorization result
       if(data.authorize){
         console.log("Deriv account authorized:", data.authorize);
+      }
+
+      // Portfolio update
+      if(data.portfolio){
+        const contracts = data.portfolio.contracts;
+        let totalTrades = contracts.length;
+        let wins = 0;
+        let profit = 0;
+
+        contracts.forEach(c => {
+          if(c.profit !== undefined){
+            profit += c.profit;
+            if(c.profit > 0) wins++;
+          }
+        });
+
+        const winRate = totalTrades > 0 ? ((wins/totalTrades)*100).toFixed(2) : 0;
+
+        // Update stats cards
+        document.getElementById("totalTrades").innerText = totalTrades;
+        document.getElementById("winRate").innerText = winRate + "%";
+        document.getElementById("profit").innerText = "$" + profit.toFixed(2);
+
+        // Update recent trades list
+        const tradesDiv = document.getElementById("trades");
+        tradesDiv.innerHTML = "";
+        contracts.slice(-5).reverse().forEach(c => {
+          const div = document.createElement("div");
+          div.innerText = `${c.contract_type} | Stake: $${c.stake} | Profit: $${c.profit}`;
+          tradesDiv.appendChild(div);
+        });
       }
     };
 
@@ -219,22 +251,14 @@
   const ctx = document.getElementById('tradeChart').getContext('2d');
   const tradeChart = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels: [], // time
-      datasets: [{
-        label: 'R_100 Price',
-        data: [], // live prices
-        backgroundColor: 'rgba(34,197,94,0.2)',
-        borderColor: 'rgba(34,197,94,1)',
-        borderWidth: 2
-      }]
-    },
-    options:{
-      responsive:true,
-      scales:{
-        y:{ beginAtZero:false }
-      }
-    }
+    data: { labels: [], datasets: [{
+      label: 'R_100 Price',
+      data: [],
+      backgroundColor: 'rgba(34,197,94,0.2)',
+      borderColor: 'rgba(34,197,94,1)',
+      borderWidth: 2
+    }]},
+    options:{ responsive:true, scales:{ y:{ beginAtZero:false } } }
   });
 
   // Update chart with new tick
@@ -244,7 +268,6 @@
     chart.data.labels.push(time);
     chart.data.datasets[0].data.push(price);
 
-    // Keep last 30 points
     if(chart.data.labels.length > 30){
       chart.data.labels.shift();
       chart.data.datasets[0].data.shift();
