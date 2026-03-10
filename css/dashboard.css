@@ -1,175 +1,50 @@
-/* frontend/css/dashboard.css */
-
-/* Reset & basics */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-body {
-  background: #0f0f1a;
-  color: #fff;
+.dashboard-container {
   display: flex;
-  min-height: 100vh;
+  justify-content: space-around;
+  margin-top: 150px; /* below header */
+  flex-wrap: wrap;
+  padding: 20px;
 }
 
-/* Sidebar */
-.sidebar {
+.card-tile {
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid cyan;
+  border-radius: 15px;
+  padding: 20px;
   width: 250px;
-  background: #1b1b2f;
+  height: 180px;
+  margin: 15px;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
   display: flex;
   flex-direction: column;
-  padding-top: 60px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100%;
-  transition: width 0.3s;
-  z-index: 90;
-}
-
-.sidebar.collapsed {
-  width: 60px;
-}
-
-.sidebar .menu-item {
-  padding: 15px 20px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.sidebar .menu-item:hover {
-  background: #52c41a;
-  color: #000;
-}
-
-.sidebar .menu-item i {
-  margin-right: 10px;
-}
-
-/* Top navigation inside dashboard */
-.top-nav-dashboard {
-  width: 100%;
-  height: 60px;
-  background: #1b1b2f;
-  display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  position: fixed;
-  left: 250px;
-  top: 0;
-  z-index: 100;
-  transition: left 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.sidebar.collapsed + .top-nav-dashboard {
-  left: 60px;
+.card-tile:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
 }
 
-.top-nav-dashboard .nav-buttons button {
-  margin-left: 10px;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  background: #1890ff;
+.card-tile h3 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.card-tile p {
+  font-size: 0.9rem;
+  margin: 10px 0;
+}
+
+.card-tile button {
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: 0.2s;
-}
-
-.top-nav-dashboard .nav-buttons button:hover {
-  background: #40a9ff;
-}
-
-/* Main content */
-.main-content {
-  margin-left: 250px;
-  margin-top: 60px;
-  padding: 20px;
-  transition: margin-left 0.3s;
-}
-
-.sidebar.collapsed ~ .main-content {
-  margin-left: 60px;
-}
-
-/* Cards */
-.card {
-  background: #1e1e2f;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-  margin-bottom: 20px;
-}
-
-/* Account Panel */
-.account-info {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.account-info span {
+  color: #000;
   font-weight: bold;
+  transition: background 0.3s;
 }
 
-/* Buy/Sell Panel */
-.trade-panel {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.trade-panel button {
-  flex: 1;
-  padding: 10px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  color: #fff;
-  transition: 0.2s;
-}
-
-#buyBtn { background: #52c41a; }
-#buyBtn:hover { background: #73d13d; }
-
-#sellBtn { background: #ff4d4f; }
-#sellBtn:hover { background: #ff7875; }
-
-/* Collapsible toggle */
-.collapse-btn {
-  position: absolute;
-  top: 10px;
-  left: 250px;
-  background: #1890ff;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.sidebar.collapsed ~ .collapse-btn {
-  left: 60px;
-}
-
-.collapse-btn:hover {
-  background: #40a9ff;
-}
-
-/* Responsive */
-@media screen and (max-width: 768px) {
-  .sidebar {
-    width: 60px;
-    padding-top: 60px;
-  }
-  .top-nav-dashboard {
-    left: 60px;
-  }
-  .main-content {
-    margin-left: 60px;
-  }
+.card-tile button:hover {
+  filter: brightness(1.2);
 }
