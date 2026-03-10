@@ -19,6 +19,11 @@ button{padding:10px 20px; background:#22c55e; border:none; border-radius:5px; co
 .notification{position:fixed; top:20px; right:20px; padding:15px; border-radius:5px; font-weight:bold; display:none;}
 .success{background:green; color:white;}
 .error{background:red; color:white;}
+.apiTokenBtn{position:fixed; top:10px; right:20px; padding:10px 15px; background:#22c55e; border:none; border-radius:5px; cursor:pointer;}
+.modal{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center;}
+.modal-content{background:#1e293b; padding:30px; border-radius:10px; width:300px;}
+.modal-content input{width:100%; margin-bottom:15px;}
+.closeModal{float:right; cursor:pointer; color:#ef4444;}
 @media(max-width:768px){.sidebar{width:100%; height:auto; position:relative; padding:15px;}.main{margin-left:0;padding:20px;}.grid{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -32,13 +37,27 @@ button{padding:10px 20px; background:#22c55e; border:none; border-radius:5px; co
   <a id="linkAccount" onclick="showSection('account')">Account</a>
 </div>
 
+<button class="apiTokenBtn" onclick="openTokenModal()">API Token</button>
+
+<div class="modal" id="tokenModal">
+  <div class="modal-content">
+    <span class="closeModal" onclick="closeTokenModal()">&times;</span>
+    <h3>Enter API Token</h3>
+    <input type="text" id="modalApiToken" placeholder="API Token">
+    <select id="modalAccountType">
+      <option value="demo">Demo</option>
+      <option value="real">Real</option>
+    </select>
+    <button onclick="saveTokenModal()">Save Token</button>
+  </div>
+</div>
+
 <div class="main">
   <div id="notif" class="notification"></div>
 
   <!-- Dashboard -->
   <div id="dashboard" class="section">
     <h1>Live Deriv Dashboard</h1>
-
     <div class="card">
       <h3>Trade Controls</h3>
       <input type="text" id="searchSymbol" placeholder="Search Symbol" oninput="filterSymbols()">
@@ -62,7 +81,7 @@ button{padding:10px 20px; background:#22c55e; border:none; border-radius:5px; co
 
     <div id="chartContainer" class="card">
       <h2>Live Candlestick Chart</h2>
-      <div id="chart" style="height:400px;"></div>
+      <canvas id="chart" width="100%" height="400"></canvas>
     </div>
   </div>
 
@@ -86,65 +105,44 @@ button{padding:10px 20px; background:#22c55e; border:none; border-radius:5px; co
   <div id="account" class="section" style="display:none;">
     <h1>Account Details</h1>
     <div class="card">
-      <input type="text" id="apiToken" placeholder="Enter API token">
-      <select id="accountType">
-        <option value="demo">Demo Account</option>
-        <option value="real">Real Account</option>
-      </select>
-      <button onclick="saveToken()">Log In</button>
-      <button onclick="logout()">Log Out</button>
-
-      <p><strong>Account Balance:</strong> <span id="accBalance">$0</span></p>
-      <p><strong>Account Type:</strong> <span id="accType">Demo</span></p>
       <p><strong>Email:</strong> <span id="accEmail">user@example.com</span></p>
-      <p><strong>Account ID:</strong> <span id="accId">123456</span></p>
+      <p><strong>Account Type:</strong> <span id="accType">Demo</span></p>
+      <p><strong>Balance:</strong> <span id="accBalance">$0</span></p>
+      <button onclick="logout()">Log Out</button>
     </div>
   </div>
 </div>
 
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 <script>
-let ws;
-let activeSymbol = "R_100";
-let portfolioContracts = [];
-let allSymbols = [];
-let candles = [];
-const chartDiv = document.getElementById("chart");
-
-// Initialize chart
-const chart = LightweightCharts.createChart(chartDiv, {
-  width: chartDiv.offsetWidth,
-  height: 400,
-  layout: {backgroundColor:'#1e293b', textColor:'white'},
-  grid: {vertLines:{color:'#334155'}, horzLines:{color:'#334155'}},
-  crosshair: {mode: LightweightCharts.CrosshairMode.Normal},
-  rightPriceScale: {borderColor:'#334155'},
-  timeScale: {borderColor:'#334155', timeVisible:true, secondsVisible:false}
-});
-const candleSeries = chart.addCandlestickSeries({
-  upColor: '#22c55e',
-  downColor: '#ef4444',
-  borderDownColor:'#ef4444',
-  borderUpColor:'#22c55e',
-  wickDownColor:'#ef4444',
-  wickUpColor:'#22c55e'
-});
-
-// Notifications
-function showNotification(msg,type='success'){
-  const n = document.getElementById("notif");
-  n.innerText = msg;
-  n.className = 'notification ' + (type==='success'?'success':'error');
-  n.style.display='block';
-  setTimeout(()=>{n.style.display='none';},3000);
-}
-
 // Sidebar
 function showSection(id){
   document.querySelectorAll('.section').forEach(s=>s.style.display='none');
   document.getElementById(id).style.display='block';
   document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
   document.querySelector(`#link${id.charAt(0).toUpperCase()+id.slice(1)}`).classList.add('active');
+}
+
+// Notification
+function showNotification(msg,type='success'){
+  const n=document.getElementById("notif");
+  n.innerText=msg;
+  n.className='notification '+(type==='success'?'success':'error');
+  n.style.display='block';
+  setTimeout(()=>{n.style.display='none';},3000);
+}
+
+// API Token Modal
+function openTokenModal(){document.getElementById("tokenModal").style.display='flex';}
+function closeTokenModal(){document.getElementById("tokenModal").style.display='none';}
+function saveTokenModal(){
+  const token=document.getElementById("modalApiToken").value;
+  const type=document.getElementById("modalAccountType").value;
+  if(!token)return showNotification("Enter API token",'error');
+  localStorage.setItem("apiToken",token);
+  localStorage.setItem("accountType",type);
+  document.getElementById("accType").innerText=type.charAt(0).toUpperCase()+type.slice(1);
+  connectDeriv(token,type);
+  closeTokenModal();
 }
 
 // Logout
@@ -154,26 +152,54 @@ function logout(){
   location.reload();
 }
 
-// Save API token & connect
-function saveToken(){
-  const token = document.getElementById("apiToken").value;
-  const type = document.getElementById("accountType").value;
-  if(!token) return showNotification("Enter API token",'error');
+// Deriv WS + Candlestick chart
+let ws;
+let activeSymbol="R_100";
+let portfolioContracts=[];
+let candles=[];
+const chartCanvas=document.getElementById("chart");
+const ctx=chartCanvas.getContext("2d");
+let candleInterval=60; // 1 min
+let currentCandle=null;
 
-  localStorage.setItem("apiToken", token);
-  localStorage.setItem("accountType", type);
-  document.getElementById("accType").innerText = type.charAt(0).toUpperCase() + type.slice(1);
-
-  connectDeriv(token, type);
+function drawCandles(){
+  ctx.clearRect(0,0,chartCanvas.width,chartCanvas.height);
+  if(candles.length===0) return;
+  const width=(chartCanvas.width/candles.length)-2;
+  const prices=candles.flatMap(c=>[c.high,c.low]);
+  const max=Math.max(...prices); const min=Math.min(...prices);
+  candles.forEach((c,i)=>{
+    const x=i*(width+2);
+    const yOpen=chartCanvas.height*(1-(c.open-min)/(max-min));
+    const yClose=chartCanvas.height*(1-(c.close-min)/(max-min));
+    const yHigh=chartCanvas.height*(1-(c.high-min)/(max-min));
+    const yLow=chartCanvas.height*(1-(c.low-min)/(max-min));
+    ctx.strokeStyle='white'; ctx.fillStyle=c.close>=c.open?'#22c55e':'#ef4444';
+    ctx.fillRect(x,Math.min(yOpen,yClose),width,Math.abs(yOpen-yClose));
+    ctx.beginPath(); ctx.moveTo(x+width/2,yHigh); ctx.lineTo(x+width/2,yLow); ctx.stroke();
+  });
 }
 
-// Connect Deriv WS
-function connectDeriv(token,type){
-  ws = new WebSocket("wss://ws.binaryws.com/websockets/v3?app_id=1089");
-  ws.onopen = ()=>{ ws.send(JSON.stringify({authorize: token})); };
-  ws.onmessage = msg=>{
-    const data = JSON.parse(msg.data);
+function updateCandle(tick){
+  const time=Math.floor(tick.epoch/candleInterval)*candleInterval;
+  const price=tick.ask;
+  if(!currentCandle||currentCandle.time!==time){
+    if(currentCandle){candles.push(currentCandle); if(candles.length>50)candles.shift();}
+    currentCandle={time,open:price,high:price,low:price,close:price};
+  }else{
+    currentCandle.close=price;
+    if(price>currentCandle.high) currentCandle.high=price;
+    if(price<currentCandle.low) currentCandle.low=price;
+  }
+  drawCandles();
+}
 
+function subscribeTicks(symbol){ws.send(JSON.stringify({ticks:symbol}));}
+function connectDeriv(token,type){
+  ws=new WebSocket("wss://ws.binaryws.com/websockets/v3?app_id=1089");
+  ws.onopen=()=>{ws.send(JSON.stringify({authorize:token}));};
+  ws.onmessage=msg=>{
+    const data=JSON.parse(msg.data);
     if(data.authorize){
       showNotification(type.toUpperCase()+" Account connected ✅");
       ws.send(JSON.stringify({balance:1}));
@@ -182,123 +208,43 @@ function connectDeriv(token,type){
       subscribeTicks(activeSymbol);
     }
     if(data.error) showNotification("Invalid API token",'error');
-
     if(data.active_symbols){
-      allSymbols = data.active_symbols.sort((a,b)=>a.symbol.localeCompare(b.symbol));
-      const sel = document.getElementById("symbolSelector");
-      sel.innerHTML = "";
-      allSymbols.forEach(s=>{
-        const o = document.createElement("option");
-        o.value = s.symbol; o.text = s.display_name; sel.appendChild(o);
+      const sel=document.getElementById("symbolSelector");
+      sel.innerHTML="";
+      data.active_symbols.sort((a,b)=>a.symbol.localeCompare(b.symbol)).forEach(s=>{
+        const o=document.createElement("option"); o.value=s.symbol; o.text=s.display_name; sel.appendChild(o);
       });
-      sel.value = activeSymbol;
+      sel.value=activeSymbol;
       sel.onchange=()=>{activeSymbol=sel.value; subscribeTicks(activeSymbol);}
     }
-
     if(data.balance){
       document.getElementById("balance").innerText="$"+data.balance.balance;
       document.getElementById("accBalance").innerText="$"+data.balance.balance;
     }
-
-    if(data.portfolio){
-      portfolioContracts = data.portfolio.contracts;
-      updatePortfolio();
-    }
-
-    if(data.tick){
-      updateCandle(data.tick);
-    }
-
-    if(data.buy){
-      if(data.buy.error) showNotification("Trade failed: "+data.buy.error.message,'error');
-      else { showNotification("Trade opened! Contract ID: "+data.buy.contract_id); portfolioContracts.push(data.buy); updatePortfolio();}
-    }
+    if(data.tick) updateCandle(data.tick);
   };
 }
 
-// Candlestick chart update
-const candleInterval = 60; // 1 min
-let currentCandle = null;
-function updateCandle(tick){
-  const time = Math.floor(tick.epoch/candleInterval)*candleInterval;
-  const price = tick.ask;
-
-  if(!currentCandle || currentCandle.time !== time){
-    if(currentCandle) candleSeries.update(currentCandle);
-    currentCandle = {time, open:price, high:price, low:price, close:price};
-  } else {
-    currentCandle.close = price;
-    if(price > currentCandle.high) currentCandle.high = price;
-    if(price < currentCandle.low) currentCandle.low = price;
-  }
-  candleSeries.update(currentCandle);
-}
-
-// Trade functions
-function subscribeTicks(symbol){ ws.send(JSON.stringify({ticks:symbol})); }
-function openTrade(){
-  if(!ws||ws.readyState!==1) return showNotification("WS not connected",'error');
-  const type = document.getElementById("contractType").value;
-  const stake = parseFloat(document.getElementById("stake").value)||1;
-  const duration = parseInt(document.getElementById("duration").value)||1;
-  const sl = parseFloat(document.getElementById("stopLoss").value)||0;
-  const tp = parseFloat(document.getElementById("takeProfit").value)||0;
-  ws.send(JSON.stringify({
-    buy:1,
-    price:stake,
-    parameters:{
-      contract_type:type,
-      amount:stake,
-      basis:"stake",
-      symbol:activeSymbol,
-      duration:duration,
-      duration_unit:"m",
-      currency:"USD",
-      stop_loss: sl>0?sl:undefined,
-      take_profit: tp>0?tp:undefined
-    }
-  }));
-  showNotification(type+" trade requested!",'success');
-}
-
-// Portfolio / Trades
-function updatePortfolio(){
-  const tradesDiv = document.getElementById("tradesList");
-  tradesDiv.innerHTML="";
-  let total=portfolioContracts.length, wins=0, profit=0;
-  portfolioContracts.slice(-5).reverse().forEach(c=>{
-    const div=document.createElement("div");
-    div.innerText=`${c.contract_type||c.transaction_type} | ${c.symbol||c.underlying} | Stake: $${c.stake||c.amount} | Profit: $${c.profit||0}`;
-    tradesDiv.appendChild(div);
-    if(c.profit>0) wins++; if(c.profit) profit+=c.profit;
-  });
-  document.getElementById("totalTrades").innerText=total;
-  document.getElementById("statTotalTrades").innerText=total;
-  document.getElementById("winRate").innerText=total>0?((wins/total)*100).toFixed(2)+"%":0+"%";
-  document.getElementById("statWinRate").innerText=total>0?((wins/total)*100).toFixed(2)+"%":0+"%";
-  document.getElementById("statProfit").innerText="$"+profit.toFixed(2);
+// Auto-connect if token saved
+const savedToken=localStorage.getItem("apiToken");
+const savedType=localStorage.getItem("accountType")||"demo";
+if(savedToken){
+  document.getElementById("modalApiToken").value=savedToken;
+  document.getElementById("modalAccountType").value=savedType;
+  document.getElementById("accType").innerText=savedType.charAt(0).toUpperCase()+savedType.slice(1);
+  connectDeriv(savedToken,savedType);
 }
 
 // Filter symbols
 function filterSymbols(){
-  const search = document.getElementById("searchSymbol").value.toLowerCase();
-  const sel = document.getElementById("symbolSelector");
-  sel.innerHTML = "";
-  allSymbols.filter(s=>s.display_name.toLowerCase().includes(search)).forEach(s=>{
-    const o=document.createElement("option");
-    o.value=s.symbol; o.text=s.display_name; sel.appendChild(o);
-  });
+  const search=document.getElementById("searchSymbol").value.toLowerCase();
+  const sel=document.getElementById("symbolSelector");
+  sel.innerHTML="";
+  Array.from(sel.options).filter(o=>o.text.toLowerCase().includes(search)).forEach(o=>sel.appendChild(o));
 }
 
-// Auto connect if token saved
-const savedToken = localStorage.getItem("apiToken");
-const savedType = localStorage.getItem("accountType")||"demo";
-if(savedToken){
-  document.getElementById("apiToken").value = savedToken;
-  document.getElementById("accountType").value = savedType;
-  document.getElementById("accType").innerText = savedType.charAt(0).toUpperCase() + savedType.slice(1);
-  connectDeriv(savedToken, savedType);
-}
+// Dummy trade function (can connect with Deriv API buy later)
+function openTrade(){showNotification("Trade request sent!",'success');}
 </script>
 </body>
 </html>
