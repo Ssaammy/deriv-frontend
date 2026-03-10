@@ -1,100 +1,96 @@
-// chart.js
-// Get chart container
-const chartContainer = document.getElementById("chart");
+let chartContainer = document.getElementById('chart');
+let priceEl = document.getElementById('price');
+let changeEl = document.getElementById('change');
+let symbolSelect = document.getElementById('symbolSelector');
 
-// Create chart with Lightweight Charts
-const chart = LightweightCharts.createChart(chartContainer, {
-    width: chartContainer.clientWidth,
-    height: 400,
+let chart = LightweightCharts.createChart(chartContainer, {
     layout: {
-        backgroundColor: '#0f172a',
-        textColor: '#ffffff',
+        backgroundColor: '#1e1e2f',
+        textColor: '#d1d4dc',
     },
     grid: {
-        vertLines: { color: '#1e293b' },
-        horzLines: { color: '#1e293b' },
+        vertLines: { color: '#444' },
+        horzLines: { color: '#444' },
     },
-    rightPriceScale: { borderColor: '#334155' },
-    timeScale: { borderColor: '#334155', timeVisible: true, secondsVisible: true },
-    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    rightPriceScale: {
+        borderColor: '#444',
+    },
+    timeScale: {
+        borderColor: '#444',
+        timeVisible: true,
+        secondsVisible: true,
+    },
 });
 
-// Candlestick series
-const candleSeries = chart.addCandlestickSeries({
-    upColor: '#22c55e',
-    downColor: '#ef4444',
+let candleSeries = chart.addCandlestickSeries({
+    upColor: '#4bffb5',
+    downColor: '#ff4976',
     borderVisible: false,
-    wickUpColor: '#22c55e',
-    wickDownColor: '#ef4444',
+    wickUpColor: '#4bffb5',
+    wickDownColor: '#ff4976',
 });
 
-// Store last 50 candles
-let candles = [];
+let userApiToken = null; // Will be set from account.js
 
-// Function to update price display
-function updatePriceDisplay(price) {
-    const priceEl = document.getElementById("price");
-    const changeEl = document.getElementById("change");
-    const prev = candles.length > 0 ? candles[candles.length - 1].close : price;
-    if (priceEl) priceEl.innerText = price.toFixed(3);
-    if (changeEl) {
-        const change = ((price - prev) / prev * 100).toFixed(2);
-        changeEl.innerText = `${change >= 0 ? '+' : ''}${change}%`;
-        changeEl.className = change >= 0 ? "ml-2 text-green-400" : "ml-2 text-red-500";
-    }
-}
+let ws = null;
 
-// Connect to Deriv WebSocket
-let ws;
-function connectDeriv(symbol = "R_100") {
+function connectDeriv(symbol) {
     if (ws) ws.close();
 
-    ws = new WebSocket("wss://ws.binaryws.com/websockets/v3?app_id=1089");
+    ws = new WebSocket(`wss://ws.binaryws.com/websockets/v3?app_id=1089&l=${userApiToken || ''}`);
 
     ws.onopen = () => {
-        ws.send(JSON.stringify({ ticks: symbol }));
+        console.log('Connected to Deriv WebSocket');
+        // Subscribe to ticks for selected symbol
+        ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }));
     };
 
     ws.onmessage = (msg) => {
         const data = JSON.parse(msg.data);
+
+        // Tick data
         if (data.tick) {
-            const tickPrice = data.tick.quote;
-            const time = Math.floor(Date.now() / 1000);
+            const tick = data.tick;
+            const time = tick.epoch; // seconds
+            const price = tick.quote;
 
-            updatePriceDisplay(tickPrice);
+            priceEl.textContent = price.toFixed(3);
 
-            // Create candlestick (1-second candle)
-            let lastCandle = candles.length > 0 ? candles[candles.length - 1] : null;
+            // Simple % change calculation (for demo)
+            let prev = candleSeries.dataByIndex(candleSeries.dataByIndex.length - 1)?.close || price;
+            let pctChange = ((price - prev) / prev) * 100;
+            changeEl.textContent = pctChange.toFixed(2) + '%';
 
-            if (!lastCandle || time > lastCandle.time) {
-                // Start new candle
-                const candle = { time, open: tickPrice, high: tickPrice, low: tickPrice, close: tickPrice };
-                candles.push(candle);
-                if (candles.length > 50) candles.shift(); // keep last 50 candles
-                candleSeries.setData(candles);
+            // Update chart with last candle (1-minute candle simulation)
+            let lastCandle = candleSeries.dataByIndex(candleSeries.dataByIndex.length - 1);
+            let timeSec = time;
+
+            if (!lastCandle || lastCandle.time !== timeSec) {
+                candleSeries.update({ time: timeSec, open: price, high: price, low: price, close: price });
             } else {
-                // Update current candle
-                lastCandle.high = Math.max(lastCandle.high, tickPrice);
-                lastCandle.low = Math.min(lastCandle.low, tickPrice);
-                lastCandle.close = tickPrice;
-                candleSeries.update(lastCandle);
+                candleSeries.update({
+                    time: timeSec,
+                    open: lastCandle.open,
+                    high: Math.max(lastCandle.high, price),
+                    low: Math.min(lastCandle.low, price),
+                    close: price,
+                });
             }
         }
     };
 
-    ws.onclose = () => console.log("Deriv WebSocket closed");
-    ws.onerror = (err) => console.log("Deriv WebSocket error:", err);
+    ws.onerror = (err) => {
+        console.error('WebSocket error:', err);
+    };
+
+    ws.onclose = () => console.log('Deriv WebSocket closed');
 }
 
-// Initial symbol
-connectDeriv(document.getElementById("symbolSelector").value);
+// Change symbol when dropdown changes
+function changeSymbol() {
+    const symbol = symbolSelect.value;
+    connectDeriv(symbol);
+}
 
-// Change symbol dynamically
-document.getElementById("symbolSelector").addEventListener("change", (e) => {
-    connectDeriv(e.target.value);
-});
-
-// Resize chart when window resizes
-window.addEventListener("resize", () => {
-    chart.resize(chartContainer.clientWidth, 400);
-});
+// Initialize default symbol
+connectDeriv(symbolSelect.value);

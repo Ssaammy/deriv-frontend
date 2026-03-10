@@ -1,96 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Dashboard</title>
-
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Trading Chart Library -->
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-
+    <title>YourTool – Powered by Deriv</title>
+    <!-- CSS -->
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/chart.css">
+    <!-- Lightweight Charts library -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 </head>
-
-<body class="bg-gray-900 text-white">
-
-    <!-- HEADER / NAV -->
-    <header class="flex justify-between items-center px-6 py-3 bg-gray-800 shadow">
-        <div class="text-2xl font-bold text-green-400">TradePro</div>
-        <nav class="space-x-6">
-            <button onclick="login()" class="hover:text-green-400">Log in</button>
-            <button onclick="signup()" class="hover:text-green-400">Sign up</button>
-            <button onclick="enterApiToken()" class="hover:text-green-400">API Token</button>
-        </nav>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+        <div class="logo">YourTool <span class="powered">– Powered by Deriv</span></div>
+        <div class="nav-links">
+            <button onclick="login()">Log In</button>
+            <button onclick="enterApiToken()">API Token</button>
+            <button onclick="signup()">Sign Up</button>
+        </div>
     </header>
 
-    <div class="flex h-screen">
+    <!-- Main Content -->
+    <div class="main-container">
 
-        <!-- SIDEBAR -->
-        <aside class="w-56 bg-gray-800 p-4 space-y-4 shadow-inner">
-            <div class="font-semibold text-green-400">Menu</div>
-            <button class="w-full text-left hover:text-green-400">Chart</button>
-            <button class="w-full text-left hover:text-green-400">Tradingview</button>
-            <button class="w-full text-left hover:text-green-400">Trading Grid</button>
+        <!-- Sidebar / Markets -->
+        <aside class="sidebar">
+            <h2>Markets</h2>
+            <select id="marketSelector">
+                <optgroup label="Favorite">
+                    <option value="R_100">Crash 100</option>
+                    <option value="R_50">Jump 50</option>
+                </optgroup>
+                <optgroup label="Derived Baskets">
+                    <option value="basket1">Basket 1</option>
+                    <option value="basket2">Basket 2</option>
+                </optgroup>
+                <optgroup label="Synthetics">
+                    <option value="synthetic_10">Volatility 10 Index</option>
+                    <option value="synthetic_50">Volatility 50 Index</option>
+                </optgroup>
+                <optgroup label="Forex">
+                    <option value="frxAUDUSD">AUD/USD</option>
+                    <option value="frxEURUSD">EUR/USD</option>
+                </optgroup>
+                <optgroup label="Crypto">
+                    <option value="CRYPTO_BTCUSD">BTC/USD</option>
+                    <option value="CRYPTO_ETHUSD">ETH/USD</option>
+                </optgroup>
+                <optgroup label="Commodities">
+                    <option value="COFFEE">Coffee</option>
+                    <option value="GOLD">Gold</option>
+                </optgroup>
+            </select>
+            <button onclick="changeSymbol()">Load Symbol</button>
         </aside>
 
-        <!-- MAIN CONTENT -->
-        <main class="flex-1 p-6 overflow-auto">
-
-            <!-- ACCOUNT PANEL -->
-            <div class="flex justify-between items-center mb-4 p-4 bg-gray-800 rounded shadow">
-                <div>
-                    <p>Email: <span id="userEmail">user@example.com</span></p>
-                    <p>Balance: <span id="userBalance">0.00</span> USD</p>
-                    <p>Account: <span id="accountType">Demo</span></p>
-                </div>
-                <button onclick="logout()" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700">Log out</button>
-            </div>
-
-            <!-- TRADING CHART -->
-            <div class="chart-card bg-gray-800 p-4 rounded shadow mb-6">
-                <div class="flex justify-between mb-2">
+        <!-- Main Dashboard Panel -->
+        <section class="dashboard">
+            <!-- Live Chart -->
+            <div class="chart-card">
+                <div class="chart-header">
                     <div>
-                        <span id="price" class="text-2xl font-bold">940.518</span>
-                        <span id="change" class="ml-2 text-green-400">0.00%</span>
+                        Price: <span id="price">0.000</span>
+                        <span id="change">0.00%</span>
                     </div>
-                    <select id="symbolSelector" class="bg-gray-700 px-2 py-1 rounded">
-                        <option value="R_100">Volatility 100 Index</option>
-                        <option value="R_50">Volatility 50 Index</option>
-                        <option value="R_25">Volatility 25 Index</option>
-                        <option value="R_10">Volatility 10 Index</option>
-                        <option value="frxAUDUSD">AUD/USD</option>
-                    </select>
+                    <div>
+                        Symbol:
+                        <select id="symbolSelector">
+                            <option value="R_100">Crash 100</option>
+                            <option value="R_50">Jump 50</option>
+                            <option value="synthetic_10">Volatility 10 Index</option>
+                        </select>
+                    </div>
                 </div>
-
-                <div id="chart" style="height:400px;"></div>
-
-                <!-- Probability Bars -->
-                <div id="percentageBars" class="mt-4 flex space-x-2 justify-center"></div>
+                <div id="chart" style="height: 400px; width: 100%;"></div>
             </div>
 
-            <!-- TRADING PANEL -->
-            <div class="trading-panel bg-gray-800 p-4 rounded shadow">
-                <div class="flex space-x-4 items-center">
-                    <input id="tradeAmount" type="number" placeholder="Amount" class="px-2 py-1 rounded bg-gray-700 w-32">
-                    <input id="stopLoss" type="number" placeholder="Stop Loss" class="px-2 py-1 rounded bg-gray-700 w-32">
-                    <input id="takeProfit" type="number" placeholder="Take Profit" class="px-2 py-1 rounded bg-gray-700 w-32">
-                    <button onclick="buyTrade()" class="bg-green-600 px-4 py-2 rounded hover:bg-green-700">Buy</button>
-                    <button onclick="sellTrade()" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700">Sell</button>
-                </div>
+            <!-- Trading Panel -->
+            <div class="trade-panel">
+                <input type="number" id="tradeAmount" placeholder="Amount USD">
+                <input type="number" id="stopLoss" placeholder="Stop Loss">
+                <input type="number" id="takeProfit" placeholder="Take Profit">
+                <button onclick="placeTrade('buy')" class="buy-btn">Buy</button>
+                <button onclick="placeTrade('sell')" class="sell-btn">Sell</button>
             </div>
 
-        </main>
+            <!-- Analysis Tools -->
+            <div class="analysis-panel">
+                <h3>Analysis Tools</h3>
+                <p>Here you can display signals, charts, historical data, and other analysis tools. (Placeholder for now)</p>
+            </div>
+
+            <!-- Chat Panel -->
+            <div class="chat-panel">
+                <h3>Chat</h3>
+                <div id="chatMessages"></div>
+                <input type="text" id="chatInput" placeholder="Type a message">
+                <button onclick="sendChat()">Send</button>
+            </div>
+        </section>
     </div>
 
-    <!-- JS FILES -->
-    <script src="js/chart.js"></script>
+    <!-- JS Scripts -->
     <script src="js/account.js"></script>
     <script src="js/deriv.js"></script>
-
+    <script src="js/chart.js"></script>
+    <script src="js/chat.js"></script>
 </body>
 </html>
